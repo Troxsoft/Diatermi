@@ -3,19 +3,18 @@ use std::{fmt::format, io::stdout};
 use crossterm::style::{Color, Print, ResetColor, SetBackgroundColor, SetForegroundColor};
 
 use crate::terminal::{DrawObjectTrait, DrawTrait, Terminal, Vector2};
+
+use super::DrawCommunicator::DrawCommunicator;
 #[derive(Debug, Clone)]
 pub struct Text {
-    text_: String,
-    color_: crate::Color,
-    position_: Vector2,
-    bg_color_: crate::Color,
+    communicator: DrawCommunicator,
 }
 impl Text {
     pub fn set_text(&mut self, string: impl ToString) {
-        self.text_ = string.to_string()
+        self.communicator.draw_text = string.to_string()
     }
     pub fn text(&self) -> String {
-        self.text_.clone()
+        self.communicator.draw_text.clone()
     }
 }
 impl ToString for Text {
@@ -24,71 +23,51 @@ impl ToString for Text {
     }
 }
 impl<'a> DrawObjectTrait<'a> for Text {
-    fn draw(&self) {
-        use crossterm::cursor::MoveTo;
-        crossterm::execute!(
-            stdout(),
-            MoveTo(
-                self.position().x.try_into().unwrap(),
-                self.position().y.try_into().unwrap()
-            ),
-            SetForegroundColor(self.color_),
-            SetBackgroundColor(self.bg_color_),
-            Print(self.text_.clone()),
-            ResetColor
-        );
-    }
-
     fn set_position(&mut self, position: crate::terminal::Vector2) {
-        self.position_ = position
+        self.communicator.position = position
     }
 
     fn set_color(&mut self, color: crate::Color) {
-        self.color_ = color
+        self.communicator.color = color
     }
 
     fn color(&self) -> crate::Color {
-        self.color_
+        self.communicator.color
     }
 
     fn position(&self) -> Vector2 {
-        self.position_
+        self.communicator.position
     }
 
     fn set_bg_color(&mut self, color: crate::Color) {
-        self.bg_color_ = color
+        self.communicator.bg_color = color
     }
 
     fn bg_color(&self) -> crate::Color {
-        self.bg_color_
+        self.communicator.bg_color
     }
 
-    fn new() -> Self {
+    fn new(id: impl ToString) -> Self {
         Self {
-            color_: Color::Cyan,
-            text_: "hello :)".to_string(),
-            position_: Vector2::new(0, 0),
-            bg_color_: Color::Black,
+            communicator: DrawCommunicator {
+                bg_color: Color::Blue,
+                color: Color::Black,
+                draw_text: "text value".to_string(),
+                id: id.to_string(),
+                position: Vector2::new(0, 0),
+            },
         }
     }
 
-    fn clear(&self) {
-        let mut text__: String = "".to_string();
-        let mut i = 0;
-        while i < self.text().len() {
-            text__.push_str("⠀");
-            i += 1;
-        }
-        crossterm::execute!(
-            stdout(),
-            crossterm::cursor::MoveTo(
-                self.position().x.try_into().unwrap(),
-                self.position().y.try_into().unwrap()
-            ),
-            SetForegroundColor(self.color_),
-            SetBackgroundColor(self.bg_color_),
-            Print(text__),
-            ResetColor
-        );
+    fn clear(&mut self) {
+        self.communicator.draw_text = "".to_string();
+    }
+
+    fn id(&self) -> String {
+        self.communicator.id.clone()
+    }
+
+    fn communicator(&self) -> super::DrawCommunicator::DrawCommunicator {
+        self.communicator.clone()
     }
 }

@@ -5,7 +5,12 @@ use crossterm::{
     event::{poll, read, Event, KeyCode, KeyModifiers},
     terminal::{disable_raw_mode, enable_raw_mode},
 };
-#[derive(Debug, Clone, Copy)]
+
+use crate::draw::{
+    DrawCommunicator::{DrawCommunicator, DrawHandler},
+    DrawTerminal::DrawTerminal,
+};
+#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
 pub struct Vector2 {
     pub x: u32,
     pub y: u32,
@@ -16,36 +21,38 @@ impl Vector2 {
     }
 }
 pub trait DrawObjectTrait<'a> {
-    fn new() -> Self;
-    fn draw(&self);
+    fn new(id: impl ToString) -> Self;
     fn set_color(&mut self, color: crate::Color);
     fn set_position(&mut self, position: Vector2);
     fn color(&self) -> crate::Color;
     fn set_bg_color(&mut self, color: crate::Color);
     fn bg_color(&self) -> crate::Color;
     fn position(&self) -> Vector2;
-
-    fn clear(&self);
+    fn id(&self) -> String;
+    fn clear(&mut self);
+    fn communicator(&self) -> DrawCommunicator;
 }
 
 pub trait DrawTrait<'a> {
-    fn new(terminal: &'a Terminal) -> Self;
+    fn new() -> Self;
 
     fn clear_all(&mut self);
     fn clear_position(&mut self, pos: Vector2);
-    fn draw(&self, object: impl DrawObjectTrait<'a>);
 }
 #[derive(Debug, Clone)]
 
-pub struct Terminal {}
+pub struct Terminal {
+    pub draw: DrawTerminal,
+    pub draw_handler: DrawHandler,
+}
 
-pub trait TerminalsEvents<'a> {
-    fn new(terminal: &'a mut Terminal) -> Self;
-    fn on_loop(&mut self);
-    fn on_event(&mut self, event: Event);
-    fn on_start(&mut self);
-    fn on_end(&mut self);
-    fn is_stop(&mut self) -> bool;
+pub trait TerminalsEvents {
+    fn new() -> Self;
+    fn on_loop<'a>(&mut self, terminal: &'a mut Terminal) -> Terminal;
+    fn on_event<'a>(&mut self, terminal: &'a mut Terminal, event: Event) -> Terminal;
+    fn on_start<'a>(&mut self, terminal: &'a mut Terminal) -> Terminal;
+    fn on_end<'a>(&mut self, terminal: &'a mut Terminal) -> Terminal;
+    fn is_stop<'a>(&mut self, terminal: &'a mut Terminal) -> (bool, Terminal);
 }
 
 pub struct CursorConfig {
@@ -61,10 +68,42 @@ impl CursorConfig {
         }
     }
 }
+pub fn run(mut app: impl TerminalsEvents) {
+    enable_raw_mode().unwrap();
+    let mut terminal = Terminal::new();
+    crossterm::execute!(
+        stdout(),
+        crossterm::terminal::Clear(crossterm::terminal::ClearType::All),
+        crossterm::cursor::MoveTo(0, 0)
+    );
+    crossterm::execute!(stdout(), crossterm::event::EnableMouseCapture);
+    terminal = app.on_start(&mut terminal.clone()).clone();
 
-impl Terminal {
+    loop {
+        let aj = app.is_stop(&mut terminal.clone());
+        terminal = aj.1.clone();
+        if aj.0 {
+            break;
+        }
+        if poll(std::time::Duration::from_micros(4000)).unwrap() {
+            terminal = app.on_event(&mut terminal.clone(), read().unwrap()).clone();
+        } else {
+            terminal = app.on_loop(&mut terminal.clone()).clone();
+        }
+    }
+    terminal = app.on_end(&mut terminal.clone()).clone();
+    crossterm::execute!(stdout(), crossterm::event::DisableMouseCapture);
+    disable_raw_mode().unwrap();
+}
+impl<'a> Terminal {
     pub fn new() -> Self {
-        Terminal {}
+        Terminal {
+            draw: DrawTerminal::new(),
+            draw_handler: DrawHandler::new(),
+        }
+    }
+    pub fn register(&mut self, object: impl DrawObjectTrait<'a>) {
+        self.draw_handler.add(object.communicator());
     }
     pub fn set_cursor(&self, cursor: CursorConfig) {
         if cursor.hide {
@@ -89,30 +128,5 @@ impl Terminal {
     }
     pub fn show_cursor(&self) {
         crossterm::execute!(stdout(), crossterm::cursor::Show);
-    }
-
-    pub fn start<'a>(&mut self, mut app: impl TerminalsEvents<'a>) {
-        enable_raw_mode().unwrap();
-        crossterm::execute!(
-            stdout(),
-            crossterm::terminal::Clear(crossterm::terminal::ClearType::All),
-            crossterm::cursor::MoveTo(0, 0)
-        );
-        crossterm::execute!(stdout(), crossterm::event::EnableMouseCapture);
-        app.on_start();
-
-        loop {
-            if app.is_stop() {
-                break;
-            }
-            if poll(std::time::Duration::from_micros(4000)).unwrap() {
-                app.on_event(read().unwrap());
-            } else {
-                app.on_loop();
-            }
-        }
-        app.on_end();
-        crossterm::execute!(stdout(), crossterm::event::DisableMouseCapture);
-        disable_raw_mode().unwrap();
     }
 }
