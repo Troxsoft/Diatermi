@@ -1,11 +1,10 @@
 use diatermi::{
-    self, config,
-    draw::{DrawTerminal::DrawTerminal, Text::Text},
-    event::{Event, KeyCode, KeyEvent, KeyEventKind, KeyModifiers},
-    is_key_press,
-    terminal::{run, CursorConfig, DrawObjectTrait, DrawTrait, Terminal, TerminalsEvents, Vector2},
-    Color,
+    config,
+    event::Event,
+    event::{KeyCode, KeyEvent, KeyEventKind, KeyModifiers},
+    is_key_press, run, DrawObjectTrait, Terminal, TerminalsEvents, Text, Vector2,
 };
+
 fn main() {
     run(App::new());
 }

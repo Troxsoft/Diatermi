@@ -54,6 +54,8 @@ dependencies = [
 [[package]]
 name = "diatermi"
 version = "0.1.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "170d10a05586553d8958c09ca27005fee3413270e555dc177b6f3eef505bc759"
 dependencies = [
  "crossterm",
 ]
