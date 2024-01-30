@@ -12,4 +12,7 @@ pub use draw::{
 pub use terminal::{
     run, CursorConfig, DrawObjectTrait, DrawTrait, Terminal, TerminalsEvents, Vector2,
 };
+
+pub use event::*;
 pub use utils::*;
+pub use Color::*;

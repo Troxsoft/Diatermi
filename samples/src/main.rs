@@ -1,8 +1,7 @@
 use diatermi::{
-    config,
-    event::Event,
-    event::{KeyCode, KeyEvent, KeyEventKind, KeyModifiers},
-    is_key_press, run, DrawObjectTrait, Terminal, TerminalsEvents, Text, Vector2,
+    config, is_key_press, is_key_press_event, run, text, vec2, Color, CursorConfig,
+    DrawObjectTrait, Event, KeyCode, KeyEvent, KeyEventKind, KeyModifiers, SetCursorStyle,
+    Terminal, TerminalsEvents, Text, Vector2,
 };
 
 fn main() {
@@ -21,22 +20,23 @@ impl TerminalsEvents for App {
     }
     fn on_loop<'a>(&mut self, terminal: &'a mut Terminal) -> Terminal {
         self.contador += 1;
-        let mut contador = Text::new(1);
-        contador.set_text(self.contador);
+        let mut contador: Text = text!(1, self.contador);
         config!(terminal, contador.clone());
-        let mut info = Text::new(2);
-        info.set_text("info");
-        info.set_position(Vector2::new(0, 1));
+        let mut info: Text = text!(2, "info", vec2!(0, 1))
+            .with_color(Color::Red)
+            .with_bg_color(Color::Grey);
         config!(terminal, info.clone());
+
         terminal.clone()
     }
     fn on_event<'a>(&mut self, terminal: &mut Terminal, event: Event) -> Terminal {
-        match event {
-            is_key_press!('q') => {
+        is_key_press_event!(
+            event,
+            || {
                 self.stop = true;
-            }
-            _ => {}
-        }
+            },
+            'q'
+        );
         terminal.clone()
     }
     fn on_start<'a>(&mut self, terminal: &mut Terminal) -> Terminal {

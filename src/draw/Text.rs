@@ -10,11 +10,76 @@ pub struct Text {
     communicator: DrawCommunicator,
 }
 impl Text {
+    #[doc = "Change the text
+### Example:
+```
+object.set_text(2+2);    
+```
+"]
     pub fn set_text(&mut self, string: impl ToString) {
         self.communicator.draw_text = string.to_string()
     }
+    #[doc = "
+Returns the text
+### Example:
+```
+let user_info = object.text();
+```
+"]
     pub fn text(&self) -> String {
         self.communicator.draw_text.clone()
+    }
+    #[doc = "
+Returns the same object but with the text changed"]
+    pub fn with_text(&self, text: impl ToString) -> Self {
+        Self {
+            communicator: DrawCommunicator {
+                bg_color: self.communicator.bg_color,
+                color: self.communicator.color,
+                id: self.communicator.id.clone(),
+                draw_text: text.to_string().clone(),
+                position: self.communicator.position,
+            },
+        }
+    }
+    #[doc = "
+Returns the same object but with the position changed"]
+    pub fn with_position(&self, position: Vector2) -> Self {
+        Self {
+            communicator: DrawCommunicator {
+                bg_color: self.communicator.bg_color,
+                color: self.communicator.color,
+                id: self.communicator.id.clone(),
+                draw_text: self.communicator.draw_text.clone(),
+                position: position.clone(),
+            },
+        }
+    }
+    #[doc = "Returns the same object but with the color changed"]
+    pub fn with_color(&self, color: Color) -> Self {
+        Self {
+            communicator: DrawCommunicator {
+                bg_color: self.communicator.bg_color,
+                color: color.clone(),
+                id: self.communicator.id.clone(),
+                draw_text: self.communicator.draw_text.clone(),
+                position: self.communicator.position.clone(),
+            },
+        }
+    }
+    #[doc = "
+Returns the same object but with the background color changed"]
+
+    pub fn with_bg_color(&self, bg_color: Color) -> Self {
+        Self {
+            communicator: DrawCommunicator {
+                bg_color: bg_color.clone(),
+                color: self.communicator.color.clone(),
+                id: self.communicator.id.clone(),
+                draw_text: self.communicator.draw_text.clone(),
+                position: self.communicator.position.clone(),
+            },
+        }
     }
 }
 impl ToString for Text {

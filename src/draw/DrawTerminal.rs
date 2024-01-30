@@ -5,22 +5,9 @@ use crate::terminal::{DrawObjectTrait, DrawTrait, Terminal, Vector2};
 use super::{DrawCommunicator::DrawHandler, Text::Text};
 
 #[derive(Debug, Clone)]
+#[doc = "
+Manage basic things like deleting all text from the terminal or deleting something specific"]
 pub struct DrawTerminal {}
-impl DrawTerminal {
-    // pub fn text(&self, text: impl ToString, position: Vector2) -> Text {
-    //     let mut text_ = Text::new();
-    //     text_.set_position(position);
-    //     text_.set_text(text);
-    //     text_.clone()
-    // }
-    // pub fn text_color(&self, text: impl ToString, position: Vector2, color: crate::Color) -> Text {
-    //     let mut text_ = Text::new();
-    //     text_.set_position(position);
-    //     text_.set_color(color);
-    //     text_.set_text(text);
-    //     text_.clone()
-    // }
-}
 impl<'a> DrawTrait<'a> for DrawTerminal {
     fn new() -> Self {
         return Self {};
